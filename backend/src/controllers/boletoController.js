@@ -18,6 +18,9 @@ const criarBoleto = async (req, res) => {
   try {
     const { cliente_id, valor, vencimento } = req.body;
 
+    const [dia, mes, ano] = vencimento.split('/');
+    const vencimentoFormatado = `${ano}-${mes}-${dia}`;
+
     const [clientes] = await db.query('SELECT * FROM clientes WHERE id=?', [
       cliente_id,
     ]);
@@ -29,7 +32,7 @@ const criarBoleto = async (req, res) => {
 
     const [result] = await db.query(
       'INSERT INTO boletos (cliente_id, valor, vencimento, status) VALUES (?, ?, ?, ?)',
-      [cliente_id, valor, vencimento, 'pendente'],
+      [cliente_id, valor, vencimentoFormatado, 'pendente'],
     );
 
     await fetch(process.env.N8N_WEBHOOK_URL, {
@@ -48,15 +51,13 @@ const criarBoleto = async (req, res) => {
       result.insertId,
     ]);
 
-    res
-      .status(201)
-      .json({
-        id: result.insertId,
-        cliente_id,
-        valor,
-        vencimento,
-        status: 'enviado',
-      });
+    res.status(201).json({
+      id: result.insertId,
+      cliente_id,
+      valor,
+      vencimento,
+      status: 'enviado',
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ erro: 'Erro ao criar boleto' });
