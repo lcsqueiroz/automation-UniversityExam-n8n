@@ -1,0 +1,148 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "boleto",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f15ad596-7dc8-4f26-ac27-56983247e859",
+      "name": "Webhook",
+      "webhookId": "2132aa98-3135-4b1e-94a9-4d5408743f53"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2f68212f-d1f4-45d8-b7bf-77d93d59fe8e",
+              "name": "nome",
+              "value": "=  {{ $json.body.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "ceeee29d-b5ab-4aed-ab56-1e751e89e60b",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "8b9e56f1-007f-4b29-8349-62a997dd9e6e",
+              "name": "valor",
+              "value": "={{ $json.body.valor }}",
+              "type": "string"
+            },
+            {
+              "id": "10a4a99e-9487-4cd4-b697-65782a843cc4",
+              "name": "vencimento",
+              "value": "={{ $json.body.vencimento }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "fdc9706f-c574-41a7-8937-2a5e94a199a7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nconst linhaDigitavel = `1234.56789 09876.543210 12345.678901 1 ${Date.now().toString().slice(-5)}`;\nconst codigoBarras = `34191.23456 78901.234567 89012.345678 9 ${Date.now()}`;\nconst numeroBoleto = `2025.${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`;\n\n// Barcode em SVG (funciona em todos os clientes de e-mail)\nconst barras = Array.from({length: 60}, (_, i) => {\n  const w = i % 7 === 0 ? 3 : i % 5 === 0 ? 2 : 1;\n  const x = i * 4;\n  return `<rect x=\"${x}\" y=\"0\" width=\"${w}\" height=\"48\" fill=\"#222\"/>`;\n}).join('');\n\nconst barcodeSvg = `<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"240\" height=\"48\" viewBox=\"0 0 240 48\">${barras}</svg>`;\n\n// QR Code em SVG\nconst corners = [0,1,2,6,7,13,14,15,16,20,21,27,28,29,30,34,35,41,42,43,44,48];\nconst qrCells = Array.from({length: 49}, (_, i) => {\n  const col = i % 7;\n  const row = Math.floor(i / 7);\n  const fill = corners.includes(i) || Math.random() > 0.5 ? '#222' : '#fff';\n  return `<rect x=\"${col * 10}\" y=\"${row * 10}\" width=\"9\" height=\"9\" fill=\"${fill}\" rx=\"1\"/>`;\n}).join('');\n\nconst qrSvg = `<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"72\" height=\"72\" viewBox=\"0 0 70 70\">${qrCells}</svg>`;\n\nconst htmlEmail = `\n<!DOCTYPE html>\n<html>\n<body style=\"margin:0;padding:0;background:#f0f0f0;\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background:#f0f0f0;\">\n<tr><td align=\"center\" style=\"padding:24px;\">\n\n<table width=\"580\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background:#ffffff;border-radius:8px;border:1px solid #ddd;font-family:Arial,sans-serif;overflow:hidden;\">\n\n  <!-- HEADER -->\n  <tr>\n    <td style=\"background:#1a4a8a;padding:16px 24px;\">\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n        <tr>\n          <td>\n            <table cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n              <tr>\n                <td style=\"background:#fff;width:36px;height:36px;border-radius:6px;text-align:center;vertical-align:middle;\">\n                  <div style=\"width:20px;height:20px;background:#1a4a8a;border-radius:3px;margin:8px auto;\"></div>\n                </td>\n                <td style=\"padding-left:12px;\">\n                  <p style=\"color:#fff;font-size:15px;font-weight:700;margin:0;\">Banco Fictício S.A.</p>\n                  <p style=\"color:#a8c4e8;font-size:11px;margin:0;\">001-9</p>\n                </td>\n              </tr>\n            </table>\n          </td>\n          <td align=\"right\">\n            <p style=\"color:#a8c4e8;font-size:11px;margin:0;\">Boleto bancário</p>\n            <p style=\"color:#fff;font-size:13px;font-weight:700;margin:0;\">Nº ${numeroBoleto}</p>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n\n  <!-- LINHA DIGITÁVEL -->\n  <tr>\n    <td style=\"background:#f7f9fc;padding:12px 24px;border-bottom:1px solid #e0e8f0;\">\n      <p style=\"font-size:11px;color:#666;margin:0 0 2px;text-transform:uppercase;letter-spacing:0.5px;\">Linha digitável</p>\n      <p style=\"font-size:13px;font-weight:700;color:#1a4a8a;letter-spacing:0.5px;margin:0;font-family:monospace;\">${linhaDigitavel}</p>\n    </td>\n  </tr>\n\n  <!-- BENEFICIÁRIO -->\n  <tr>\n    <td style=\"padding:20px 24px 0;\">\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n        <tr>\n          <td width=\"50%\" style=\"vertical-align:top;\">\n            <p style=\"font-size:11px;color:#888;margin:0 0 2px;text-transform:uppercase;letter-spacing:0.5px;\">Beneficiário</p>\n            <p style=\"font-size:13px;font-weight:700;color:#222;margin:0;\">Sistema de Cobranças LTDA</p>\n            <p style=\"font-size:12px;color:#555;margin:0;\">CNPJ: 00.000.000/0001-00</p>\n          </td>\n          <td width=\"50%\" align=\"right\" style=\"vertical-align:top;\">\n            <p style=\"font-size:11px;color:#888;margin:0 0 2px;text-transform:uppercase;letter-spacing:0.5px;\">Agência / Conta</p>\n            <p style=\"font-size:13px;font-weight:700;color:#222;margin:0;\">0001 / 12345-6</p>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n\n  <!-- DIVISOR -->\n  <tr><td style=\"padding:16px 24px 0;\"><hr style=\"border:none;border-top:1px solid #eee;margin:0;\"/></td></tr>\n\n  <!-- PAGADOR E VENCIMENTO -->\n  <tr>\n    <td style=\"padding:16px 24px 0;\">\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n        <tr>\n          <td width=\"50%\" style=\"vertical-align:top;\">\n            <p style=\"font-size:11px;color:#888;margin:0 0 2px;text-transform:uppercase;letter-spacing:0.5px;\">Pagador</p>\n            <p style=\"font-size:13px;font-weight:700;color:#222;margin:0;\">${item.nome}</p>\n            <p style=\"font-size:12px;color:#555;margin:0;\">CPF: 000.000.000-00</p>\n          </td>\n          <td width=\"50%\" align=\"right\" style=\"vertical-align:top;\">\n            <p style=\"font-size:11px;color:#888;margin:0 0 2px;text-transform:uppercase;letter-spacing:0.5px;\">Vencimento</p>\n            <p style=\"font-size:15px;font-weight:700;color:#c0392b;margin:0;\">${item.vencimento}</p>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n\n  <!-- VALOR -->\n  <tr>\n    <td style=\"padding:16px 24px 0;\">\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background:#f7f9fc;border:1px solid #e0e8f0;border-radius:8px;\">\n        <tr>\n          <td style=\"padding:16px;\">\n            <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n              <tr>\n                <td style=\"vertical-align:middle;\">\n                  <p style=\"font-size:11px;color:#888;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.5px;\">Valor do documento</p>\n                  <p style=\"font-size:28px;font-weight:700;color:#1a4a8a;margin:0;\">R$ ${item.valor}</p>\n                </td>\n                <td align=\"right\" style=\"vertical-align:middle;\">\n                  <span style=\"background:#27ae60;color:#fff;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;display:inline-block;\">EM ABERTO</span>\n                </td>\n              </tr>\n            </table>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n\n  <!-- CÓDIGO DE BARRAS E PIX -->\n  <tr>\n    <td style=\"padding:16px 24px 0;\">\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n        <tr>\n          <td style=\"vertical-align:top;\">\n            <p style=\"font-size:11px;color:#888;margin:0 0 6px;text-transform:uppercase;letter-spacing:0.5px;\">Código de barras</p>\n            ${barcodeSvg}\n            <p style=\"font-size:10px;color:#888;margin:4px 0 0;font-family:monospace;\">${codigoBarras}</p>\n          </td>\n          <td width=\"100\" align=\"center\" style=\"vertical-align:top;\">\n            <p style=\"font-size:11px;color:#888;margin:0 0 6px;text-transform:uppercase;letter-spacing:0.5px;\">PIX</p>\n            ${qrSvg}\n            <p style=\"font-size:9px;color:#888;margin:4px 0 0;\">Pagar com PIX</p>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n\n  <!-- INSTRUÇÕES -->\n  <tr>\n    <td style=\"padding:16px 24px 0;\">\n      <hr style=\"border:none;border-top:1px solid #eee;margin:0 0 14px;\"/>\n      <p style=\"font-size:11px;color:#888;margin:0 0 6px;text-transform:uppercase;letter-spacing:0.5px;\">Instruções de pagamento</p>\n      <ul style=\"font-size:12px;color:#555;margin:0;padding-left:16px;line-height:1.8;\">\n        <li>Não receber após o vencimento.</li>\n        <li>Em caso de dúvidas, entre em contato pelo e-mail: financeiro@sistema.com.br</li>\n        <li>Após o pagamento, o prazo de compensação é de até 2 dias úteis.</li>\n        <li>Aceitar somente pelo valor indicado. Não aceitar cheque.</li>\n      </ul>\n    </td>\n  </tr>\n\n  <!-- FOOTER -->\n  <tr>\n    <td style=\"background:#f7f9fc;border-top:1px solid #e0e8f0;padding:12px 24px;text-align:center;margin-top:20px;\">\n      <p style=\"font-size:11px;color:#aaa;margin:0;\">Este é um boleto simulado gerado automaticamente · Sistema de Cobranças v1.0</p>\n    </td>\n  </tr>\n\n</table>\n</td></tr>\n</table>\n</body>\n</html>\n`;\n\nreturn [{\n  json: {\n    nome: item.nome,\n    email: item.email,\n    valor: item.valor,\n    vencimento: item.vencimento,\n    linhaDigitavel,\n    codigoBarras,\n    numeroBoleto,\n    htmlEmail\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "8db73d41-602b-44b0-9e79-b6a56081760f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "fromEmail": "lqvieira7@gmail.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "=Seu boleto chegou - Vencimento {{ $json.vencimento }}",
+        "html": "={{ $json.htmlEmail }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "887e1dcc-f28e-4fb2-bdfc-6d3af08a52b6",
+      "name": "Send an Email",
+      "webhookId": "9d2113ee-57f6-4f0f-b31e-3a295729f1af",
+      "credentials": {
+        "smtp": {
+          "id": "PaMluQaavpqwMngj",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b29ae9b6-2728-4618-bc8d-a19016dc55ba",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "39076afb7f9da45e353b5b70936cea86f8391e30190afa1628e65090bf52cc44"
+  },
+  "id": "pNtTlMOHhomx98Sz",
+  "tags": []
+}
