@@ -41,7 +41,8 @@ const atualizarCliente = async (req, res) => {
 const deletarCliente = async (req, res) => {
   try {
     const { id } = req.params;
-    await db.query('DELETE FROM clientes WHERE id=?', [id]);
+    await db.query('DELETE FROM boletos WHERE cliente_id = ?', [id]);
+    await db.query('DELETE FROM clientes WHERE id= ?', [id]);
     res.json({ mensagem: 'Cliente deletado com sucesso' });
   } catch (error) {
     res.status(500).json({ erro: 'Erro ao deletar cliente' });
