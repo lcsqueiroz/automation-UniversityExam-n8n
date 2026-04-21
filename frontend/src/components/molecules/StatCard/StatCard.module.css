@@ -1,0 +1,44 @@
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+
+.card.highlight {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.card.highlight .label {
+  color: #93c5fd;
+}
+
+.value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-dark);
+  letter-spacing: -0.5px;
+}
+
+.card.highlight .value {
+  color: #fff;
+}
+
+.sub {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+.card.highlight .sub {
+  color: #bfdbfe;
+}
