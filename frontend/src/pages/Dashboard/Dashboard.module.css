@@ -1,0 +1,27 @@
+.page {
+  padding: 24px 28px;
+}
+
+.greeting {
+  margin-bottom: 20px;
+}
+
+.greeting h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-dark);
+  letter-spacing: -0.4px;
+}
+
+.greeting p {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
